@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<tool_dependency>
+    <!-- This package name and version must match the requirement specified in the tool XML -->
+    <package name="picard" version="1.136">
+        <install version="1.0">
+            <actions>
+                <!-- First, tell Galaxy where to find the tarball or other bundle containing the files needed by the tool -->
+                <action type="download_by_url">https://github.com/broadinstitute/picard/releases/download/1.136/picard-tools-1.136.zip</action>
+                <!-- Then move them to their permanent home. You'll want to check the structure of the tarball to find out whence the files should be moved. -->
+                <action type="move_directory_files">
+                    <source_directory>.</source_directory>
+                    <destination_directory>$INSTALL_DIR</destination_directory>
+                </action>
+                <!-- Any variables specified here will be injected into the tool's environment at runtime. $INSTALL_DIR is filled in with the path to the installed files -->
+                <action type="set_environment">
+                    <environment_variable name="JAVA_JAR_PATH" action="set_to">$INSTALL_DIR</environment_variable>
+                </action>
+            </actions>
+        </install>
+        <readme>If applicable.</readme>
+    </package>
+</tool_dependency>

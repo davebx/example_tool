@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!-- This name, id, and version combination does not need to match anything else, but is used to uniquely identify the tool within Galaxy. -->
+<tool id="picard_ReorderSam" name="ReorderSam" version="1.136.0">
+    <description>reorder reads to match ordering in reference sequences</description>
+    <!-- However, this package name and version must match the same values specified in tool_dependencies.xml files. -->
+    <requirements>
+        <requirement type="package" version="1.136">picard</requirement>
+    </requirements>
+    <!-- Many tools output debugging information to stderr, which can lead to a dataset incorrectly being detected as failed. -->
+    <stdio>
+        <exit_code level="fatal" range="1:" />
+    </stdio>
+    <!-- The command tag should be fairly self-explanatory. -->
+    <command>
+    <![CDATA[
+
+    ## Whatever options you want to pass to the java interpreter.
+
+    _JAVA_OPTIONS=\${_JAVA_OPTIONS:-'-Xmx2048m -Xms256m'} &&
+    export _JAVA_OPTIONS &&
+
+    ## This step is usually not needed, but picard prefers the file extension to be .fa
+
+    ln -s "${reference_source.ref_file.fields.path}" reference.fa
+    
+    ## The JAVA_JAR_PATH is defined in the tool_dependencies.xml under package_picard_1_136
+    
+    java -jar \$JAVA_JAR_PATH/picard.jar
+
+        ## And then whatever parameters the application needs.
+
+        ReorderSam
+
+        ## The input parameter names are defined in the <inputs> section below.
+    
+        INPUT="${inputFile}"
+        OUTPUT="${outFile}"
+        REFERENCE="reference.fa"
+        ALLOW_INCOMPLETE_DICT_CONCORDANCE="${allow_incomplete_dict_concordance}"
+        ALLOW_CONTIG_LENGTH_DISCORDANCE="${allow_contig_length_discordance}"
+      
+        VALIDATION_STRINGENCY="${validation_stringency}"
+        QUIET=true
+        VERBOSITY=ERROR
+    ]]>
+    </command>
+    <inputs>
+        <!-- This input parameter may not be relevant, picard can use pregenerated sequence dictionaries from data tables. -->
+        <param help="Select genome from the list" label="Use dictionary from the list" name="ref_file" type="select">
+            <options from_data_table="picard_indexes">
+                <filter column="2" type="sort_by" />
+                <validator message="No indexes are available" type="no_options" />
+            </options>
+            <validator message="A built-in dictionary is not available for the build associated with the selected input file" type="no_options" />
+        </param>
+        <!-- Every tool does need at least one input file -->
+        <param format="sam,bam" help="If empty, upload or import a SAM/BAM dataset" label="Select SAM/BAM dataset or dataset collection" name="inputFile" type="data" />
+        <!-- Of course, some parameters are also good. -->
+        <param help="ALLOW_INCOMPLETE_DICT_CONCORDANCE" label="Allow a partial overlap of the BAM contigs with the new contigs" name="allow_incomplete_dict_concordance" type="boolean" />
+        <param help="ALLOW_CONTIG_LENGTH_DISCORDANCE" label="Permit mapping from one contig to a contig with a different length" name="allow_contig_length_discordance" type="boolean" />
+        <param help=" Setting stringency to SILENT can improve performance." label="Select validation stringency" name="validation_stringency" type="select">
+            <option selected="True" value="LENIENT">Lenient</option>
+            <option value="SILENT">Silent</option>
+            <option value="STRICT">Strict</option>
+        </param>
+    </inputs>
+    <!-- And one output file. -->
+    <outputs>
+        <data format="bam" label="${tool.name} on ${on_string}: Reordered BAM" name="outFile" />
+    </outputs>
+    <!-- It's also nice to define tests, so that you can verify that the tool produces the same output on different platforms. -->
+    <tests>
+        <test>
+            <param name="reference_source_selector" value="history" />
+            <param ftype="fasta" name="ref_file" value="picard_ReorderSam_ref.fa" />
+            <param ftype="bam" name="inputFile" value="picard_ReorderSam.bam" />
+            <param name="allow_incomplete_dict_concordance" value="false" />
+            <param name="allow_contig_length_discordance" value="false" />
+            <output file="picard_ReorderSam_test1.bam" ftype="bam" lines_diff="2" name="outFile" />
+        </test>
+    </tests>
+    <help>
+        Any relevant usage information goes here.
+    </help>
+    <!-- And of course it's nice to cite your sources, e.g. the SAM format. -->
+    <citations>
+        <citation type="doi">doi:10.1093/bioinformatics/btp352</citation>
+    </citations>
+</tool>
